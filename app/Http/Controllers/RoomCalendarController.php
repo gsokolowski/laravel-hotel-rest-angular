@@ -2,25 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use App\RoomType;
 use Illuminate\Http\Request;
+use App\RoomType;
+use App\RoomCalendar;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
-class RoomTypeController extends Controller
+class RoomCalendarController extends Controller
 {
+
+    public function setPriceInRangeForRoomType(Request $request)
+    {
+        $room_type = $request['room_type'];
+        $price =  $request['price'];
+        $start_dt =  $request['start_dt'];
+        $end_dt =  $request['end_dt'];
+        $date = date ("Y-m-d",strtotime($start_dt));
+
+        $base_room = RoomType::find($room_type);
+
+        $i=0;
+
+        while (strtotime($date) <= strtotime($end_dt)) {
+            $room_day =  RoomCalendar::firstOrNew(array('room_type_id' => $room_type, 'day'=>$date));
+
+            if(!$room_day->id){
+                $room_day->availability = $base_room->base_availability;
+            }
+
+            $room_day->rate = $price;
+            $room_day->save();
+            $date = date ("Y-m-d", strtotime("+1 day", strtotime($date)));
+            $i++;
+        }
+
+        return response("Success updated ".$i." dates",200);
+    }
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    // GET http://localhost:8000/adminapi/room_type
-    // Display all data from room_types table
     public function index()
     {
-        $room_types = RoomType::all();
-        return $room_types;
+        //
     }
 
     /**
@@ -39,16 +66,9 @@ class RoomTypeController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-
-    // POST x-www-from-urlencoded http://localhost:8000/adminapi/room_type
-    // x-www-from-urlencoded comes from POSTMAN or frontend
-    // From Laravel Form would be from-data
     public function store(Request $request)
     {
-        $room_type=new RoomType($request->all());
-        $room_type->save();
-
-        return $room_type;
+        //
     }
 
     /**
